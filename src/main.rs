@@ -6,7 +6,7 @@ use axum::{
     http::StatusCode,
     response::{
         sse::{Event, KeepAlive, Sse},
-        IntoResponse, Response,
+        Html, IntoResponse, Response,
     },
     routing::{get, post},
     Json, Router,
@@ -120,6 +120,10 @@ fn now_unix() -> u64 {
         .duration_since(UNIX_EPOCH)
         .map(|d| d.as_secs())
         .unwrap_or(0)
+}
+
+async fn index_html() -> Html<&'static str> {
+    Html(include_str!("../static/index.html"))
 }
 
 async fn health(State(st): State<Arc<EngineState>>) -> Json<serde_json::Value> {
@@ -361,6 +365,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             });
 
             let app = Router::new()
+                .route("/", get(index_html))
                 .route("/health", get(health))
                 .route("/v1/models", get(list_models))
                 .route("/v1/chat/completions", post(chat_completions))
